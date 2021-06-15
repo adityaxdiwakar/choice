@@ -129,7 +129,6 @@ dmypy.json
 .pyre/
 
 
-# tokens file
 token.go
-
 api-bin
+logs.txt
