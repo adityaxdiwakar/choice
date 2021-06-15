@@ -51,12 +51,17 @@ func main() {
 		encode(payload, w, 200)
 	})
 
-	r.Get("/chain/{underlying}/{series}", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/chain/{underlying}", func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Series-Name") == "" {
+			encode("Please supply a series name in the header", w, 400)
+			return
+		}
+
 		sig := flux.OptionChainGetRequestSignature{
 			Underlying: chi.URLParam(r, "underlying"),
 			Filter: flux.OptionChainGetFilter{
 				StrikeQuantity: 1<<31 - 1,
-				SeriesNames:    []string{chi.URLParam(r, "series")},
+				SeriesNames:    []string{r.Header.Get("Series-Name")},
 			},
 		}
 
