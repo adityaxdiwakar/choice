@@ -131,3 +131,5 @@ dmypy.json
 
 # tokens file
 token.go
+
+api-bin
