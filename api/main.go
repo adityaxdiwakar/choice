@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -44,7 +45,7 @@ func main() {
 		payload, err := s.RequestOptionSeries(sig)
 
 		if err != nil {
-			encode(err, w, 500)
+			encode(fmt.Sprintf("%v", err), w, 500)
 			return
 		}
 
@@ -68,7 +69,7 @@ func main() {
 		payload, err := s.RequestOptionChainGet(sig)
 
 		if err != nil {
-			encode(err, w, 500)
+			encode(fmt.Sprintf("%v", err), w, 500)
 			return
 		}
 
@@ -85,7 +86,7 @@ func main() {
 		payload, err := s.RequestChart(sig)
 
 		if err != nil {
-			encode(err, w, 500)
+			encode(fmt.Sprintf("%v", err), w, 500)
 			return
 		}
 

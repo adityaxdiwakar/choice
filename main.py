@@ -7,7 +7,7 @@ import json
 
 # open tickers.json file and extract tickers into list
 with open("tickers.json", "r") as f:
-    tickers = json.load(f)
+    tickers = json.load(f)[:5]
 
 logs_file = open("logs.txt", "a")
 
