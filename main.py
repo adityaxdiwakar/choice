@@ -23,8 +23,7 @@ def get_series(ticker: str) -> dict:
     req = requests.get(url)
 
     if req.status_code != 200:
-        print(f"Error: Series for {ticker} resulted in {req.status_code} response (see logs)")
-        logger("Errored on retrieving series for {ticker} with code {req.status_code} (error: {req.json()['payload'])}")
+        logger(f"Errored on retrieving series for {ticker} with code {req.status_code} (error: {req.json()['payload']})")
         time.sleep(0.5)
         return None
 
@@ -51,4 +50,3 @@ for i, ticker in enumerate(tickers):
 
 
 
-print(len(series_valid))
