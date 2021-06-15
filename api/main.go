@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/adityaxdiwakar/flux"
 	"github.com/adityaxdiwakar/tda-go"
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/chi/v5"
 )
 
 type PayloadResponse struct {
@@ -27,7 +29,7 @@ func main() {
 	}
 
 	// initialize the flux session
-	s, err := flux.New(tdaSession, true)
+	s, err := flux.New(tdaSession, false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,6 +93,51 @@ func main() {
 		}
 
 		encode(payload, w, 200)
+	})
+
+	r.Get("/quote/{underlying}/{min}/{max}", func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Series-Name") == "" {
+			encode("Please supply a series name in the header", w, 400)
+			return
+		}
+
+		min, errA := strconv.ParseFloat(chi.URLParam(r, "min"), 64)
+		max, errB := strconv.ParseFloat(chi.URLParam(r, "max"), 64)
+		if errA != nil || errB != nil {
+			encode("Please enter only floats for the min/max params", w, 400)
+			return
+		}
+
+		sig := flux.OptionQuoteRequestSignature{
+			Underlying: chi.URLParam(r, "underlying"),
+			Exchange:   "BEST",
+			Fields: []flux.QuoteField{
+				flux.Bid, flux.Ask, flux.ProbabilityITM, flux.Volume, flux.OpenInterest,
+				flux.Delta, flux.Gamma, flux.Rho, flux.Theta, flux.Vega, flux.ImplVol,
+				flux.Last,
+			},
+			Filter: flux.OptionQuoteFilter{
+				SeriesNames: strings.Split(r.Header.Get("Series-Name"), ","),
+				MinStrike:   min,
+				MaxStrike:   max,
+			},
+		}
+
+		payload, err := s.RequestOptionQuote(sig)
+
+		if err != nil {
+			encode(fmt.Sprintf("%v", err), w, 500)
+			return
+		}
+
+		encode(payload.Items, w, 200)
+
+		go func() {
+			s.Close()
+			s.Reset()
+			s.Open()
+		}()
+
 	})
 
 	http.ListenAndServe(":7731", r)

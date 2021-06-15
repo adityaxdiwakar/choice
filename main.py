@@ -5,9 +5,27 @@ import requests
 import time
 import json
 
+month_map = {
+    "JAN": "01",
+    "FEB": "02",
+    "MAR": "03",
+    "APR": "04",
+    "MAY": "05",
+    "JUN": "06",
+    "JUL": "07",
+    "AUG": "08",
+    "SEP": "09",
+    "OCT": "10",
+    "NOV": "11",
+    "DEC": "12"
+}
+
 # open tickers.json file and extract tickers into list
 with open("tickers.json", "r") as f:
     tickers = json.load(f)[:5]
+
+tickers.append("SPY")
+tickers.append("GLD")
 
 logs_file = open("logs.txt", "a")
 
@@ -79,15 +97,12 @@ for ticker in series_valid:
             continue
 
         dir_series = series["name"].replace("/", "-")
+        dir_series = dir_series.split(" ")
+        dir_series = dir_series[2] + month_map[dir_series[1]] + dir_series[0].zfill(2)
+
         Path(f"bin/{ticker}/{dir_series}").mkdir(parents=True, exist_ok=True)
         with open(f"bin/{ticker}/{dir_series}/pairs.json", "w") as f:
             json.dump(v["payload"][0], f, indent=2)
-
-        pairs = v["payload"][0]["optionPairs"]
-        for pair in pairs:
-            Path(f"bin/{ticker}/{dir_series}/{pair['strike']}").mkdir(parents=True, exist_ok=True)
-            with open(f"bin/{ticker}/{dir_series}/{pair['strike']}/pair.json", "w") as f:
-                json.dump(pair, f, indent=2)
 
         count += 1
         bar.update(count)
