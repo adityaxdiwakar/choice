@@ -43,7 +43,7 @@ for i, ticker in enumerate(tickers):
 
     Path(f"bin/{ticker}").mkdir(parents=True, exist_ok=True)
     with open(f"bin/{ticker}/series.json", "w") as f:
-        json.dump(v, f)
+        json.dump(v["payload"], f)
 
     bar.update(i)
 
