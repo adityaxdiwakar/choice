@@ -24,6 +24,12 @@ def get_quote(ticker: str, series: list[str], min, max: int) -> dict:
     logger(f"Retrieved chain quote for {ticker}")
     return req.json()
 
+def add_obj_line(orig, data: str) -> str:
+    orig += ","
+    orig += str(data)
+    return orig
+
+
 while True:
     print("")
     time_added = datetime.today().hour * 100 + datetime.today().minute
@@ -67,10 +73,32 @@ while True:
             hour = str(today.hour).zfill(2)
             minute = str(today.minute).zfill(2)
 
-            path = f"bin/{ticker}/{e_dir}/{strike}/{opt['symbol'][1:]}/{month}/{day}/{hour}"
-            Path(path).mkdir(parents=True, exist_ok=True)
-            with open(f"{path}/{minute}.json", "w") as f:
-                json.dump(opt, f)
+
+            line = month
+            line = add_obj_line(line, day)
+            line = add_obj_line(line, hour)
+            line = add_obj_line(line, minute)
+            line = add_obj_line(line, opt["symbol"])
+            line = add_obj_line(line, opt["values"]["ASK"])
+            line = add_obj_line(line, opt["values"]["BID"])
+            line = add_obj_line(line, opt["values"]["DELTA"])
+            line = add_obj_line(line, opt["values"]["GAMMA"])
+            line = add_obj_line(line, opt["values"]["IMPLIED_VOLATILITY"])
+            line = add_obj_line(line, opt["values"]["LAST"])
+            line = add_obj_line(line, opt["values"]["OPEN_INT"])
+            line = add_obj_line(line, opt["values"]["PROBABILITY_ITM"])
+            line = add_obj_line(line, opt["values"]["RHO"])
+            line = add_obj_line(line, opt["values"]["THETA"])
+            line = add_obj_line(line, opt["values"]["VEGA"])
+            line = add_obj_line(line, opt["values"]["VOLUME"])
+
+            path = f"bin/{ticker}/{e_dir}/{strike}/{opt['symbol'][1:]}.csv"
+            write_mode = 'a'
+            if not os.path.exists(path):
+                write_mode = 'w'
+
+            with open(path, write_mode) as f:
+                f.write(line + "\n")
 
             logger(f"Inserted {path}")
 
