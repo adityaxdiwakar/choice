@@ -35,8 +35,6 @@ def logger(message: str):
     logs_file.write(f"{time.strftime('%x %X', time.localtime())}: {message}\n")
     logs_file.flush()
 
-    s 
-
 def get_series(ticker: str) -> dict:
     # make the request to the series endpoint
     url = f"http://localhost:7731/series/{ticker}"
