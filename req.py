@@ -58,39 +58,41 @@ def add_obj_line(orig, data: str) -> str:
     return orig
 
 
-#print("Beginning subscriptions:")
-# subscribe first
-#ticker_dir = os.listdir("bin/")
-#for ticker in ticker_dir:
-#        if ticker != "SPY":
-#            continue
-#            #pass
-#
-#        # open the file for that ticker to get the series
-#        with open(f"bin/{ticker}/series.json", "r") as f:
-#            series = json.load(f)
-#
-#
-#        names = [d["name"] for d in series]
-#        non_expired_names = []
-#
-#        for name in names:
-#            name_spl = name.split(" ")
-#            day = int(name_spl[0])
-#            month = int(month_map[name_spl[1]])
-#            year = int(name_spl[2])
-#
-#            today = datetime.today()
-#            int_date = year * 10000 + month * 100 + day
-#            int_today = (today.year % 100) * 10000 + today.month * 100 + today.day
-#            if int_today > int_date:
-#                continue
-#
-#            non_expired_names.append(name)
-#
-#        v = get_quote( ticker, names, 0.01, 9999)
-#        print(f"| ->\tSubscribed to {ticker}")
+def subscribe():
+    print("Beginning subscriptions:")
+    # subscribe first
+    ticker_dir = os.listdir("bin/")
+    for ticker in ticker_dir:
+            if ticker != "SPY":
+                continue
+                #pass
 
+            # open the file for that ticker to get the series
+            with open(f"bin/{ticker}/series.json", "r") as f:
+                series = json.load(f)
+
+
+            names = [d["name"] for d in series]
+            non_expired_names = []
+
+            for name in names:
+                name_spl = name.split(" ")
+                day = int(name_spl[0])
+                month = int(month_map[name_spl[1]])
+                year = int(name_spl[2])
+
+                today = datetime.today()
+                int_date = year * 10000 + month * 100 + day
+                int_today = (today.year % 100) * 10000 + today.month * 100 + today.day
+                if int_today > int_date:
+                    continue
+
+                non_expired_names.append(name)
+
+            v = get_quote( ticker, names, 0.01, 9999)
+            print(f"| ->\tSubscribed to {ticker}")
+
+# subscribe()
 
 def write_to_csv(symbol: dict):
     ticker = symbol["symbol"]
