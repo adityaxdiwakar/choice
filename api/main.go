@@ -8,12 +8,17 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/adityaxdiwakar/flux"
 	"github.com/adityaxdiwakar/tda-go"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
+
+var up bool
+var messages []string
+var messageSync sync.Mutex
 
 type PayloadResponse struct {
 	Payload interface{} `json:"payload"`
@@ -29,11 +34,25 @@ func main() {
 	}
 
 	// initialize the flux session
-	s, err := flux.New(tdaSession, false)
+	s, err := flux.New(tdaSession, false, false)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	branch := make(chan string, 100)
+	s.AddBranch(branch)
 	s.Open()
+	up = true
+
+	go func() {
+		for {
+			b := <-branch
+			messageSync.Lock()
+			messages = append(messages, b)
+			fmt.Println(len(messages))
+			messageSync.Unlock()
+		}
+	}()
 
 	// init the chi router
 	r := chi.NewRouter()
@@ -113,8 +132,8 @@ func main() {
 			Exchange:   "BEST",
 			Fields: []flux.QuoteField{
 				flux.Bid, flux.Ask, flux.ProbabilityITM, flux.Volume, flux.OpenInterest,
+				flux.Last, flux.Mark, flux.MarkChange,
 				flux.Delta, flux.Gamma, flux.Rho, flux.Theta, flux.Vega, flux.ImplVol,
-				flux.Last,
 			},
 			Filter: flux.OptionQuoteFilter{
 				SeriesNames: strings.Split(r.Header.Get("Series-Name"), ","),
@@ -123,21 +142,27 @@ func main() {
 			},
 		}
 
-		payload, err := s.RequestOptionQuote(sig)
+		s.RequestOptionQuote(sig, true)
 
-		if err != nil {
-			encode(fmt.Sprintf("%v", err), w, 500)
-			return
-		}
+		encode("OK.", w, 200)
+	})
 
-		encode(payload.Items, w, 200)
+	r.Get("/quotes", func(w http.ResponseWriter, r *http.Request) {
+		messageSync.Lock()
+		defer messageSync.Unlock()
+		encode(messages, w, 200)
+		messages = []string{}
+	})
 
-		go func() {
-			s.Close()
-			s.Reset()
-			s.Open()
-		}()
+	r.Get("/status", func(w http.ResponseWriter, r *http.Request) {
+		encode(up && s.Established, w, 200)
+		return
+	})
 
+	r.Post("/restart", func(w http.ResponseWriter, r *http.Request) {
+		s.Restart()
+		encode(up && s.Established, w, 200)
+		return
 	})
 
 	http.ListenAndServe(":7731", r)
